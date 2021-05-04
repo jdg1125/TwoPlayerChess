@@ -1,0 +1,13 @@
+C:\Users\Joseph\source\repos\TwoPlayerChess\obj\Debug\netcoreapp3.1\TwoPlayerChess.csprojAssemblyReference.cache
+C:\Users\Joseph\source\repos\TwoPlayerChess\obj\Debug\netcoreapp3.1\TwoPlayerChess.AssemblyInfoInputs.cache
+C:\Users\Joseph\source\repos\TwoPlayerChess\obj\Debug\netcoreapp3.1\TwoPlayerChess.AssemblyInfo.cs
+C:\Users\Joseph\source\repos\TwoPlayerChess\obj\Debug\netcoreapp3.1\TwoPlayerChess.csproj.CoreCompileInputs.cache
+C:\Users\Joseph\source\repos\TwoPlayerChess\bin\Debug\netcoreapp3.1\TwoPlayerChess.exe
+C:\Users\Joseph\source\repos\TwoPlayerChess\bin\Debug\netcoreapp3.1\TwoPlayerChess.deps.json
+C:\Users\Joseph\source\repos\TwoPlayerChess\bin\Debug\netcoreapp3.1\TwoPlayerChess.runtimeconfig.json
+C:\Users\Joseph\source\repos\TwoPlayerChess\bin\Debug\netcoreapp3.1\TwoPlayerChess.runtimeconfig.dev.json
+C:\Users\Joseph\source\repos\TwoPlayerChess\bin\Debug\netcoreapp3.1\TwoPlayerChess.dll
+C:\Users\Joseph\source\repos\TwoPlayerChess\bin\Debug\netcoreapp3.1\TwoPlayerChess.pdb
+C:\Users\Joseph\source\repos\TwoPlayerChess\obj\Debug\netcoreapp3.1\TwoPlayerChess.dll
+C:\Users\Joseph\source\repos\TwoPlayerChess\obj\Debug\netcoreapp3.1\TwoPlayerChess.pdb
+C:\Users\Joseph\source\repos\TwoPlayerChess\obj\Debug\netcoreapp3.1\TwoPlayerChess.genruntimeconfig.cache
