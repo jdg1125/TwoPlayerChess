@@ -8,10 +8,17 @@ namespace TwoPlayerChess.ClassLibrary
     {
         public Player Owner { get; protected set; }
 
+        public Board Board { get; protected set; }
+
         public GameColors Color { get; protected set; }
         public PieceType Name { get; protected set; }
 
-        public virtual bool IsLegalMove(int startRank, int startFile, int endRank, int endFile)
+        public virtual bool HasLegalMoves()
+        {
+            return false;
+        }
+
+        public virtual bool TryMove(Move move)
         {
             return false;
         }

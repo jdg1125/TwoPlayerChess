@@ -6,11 +6,12 @@ namespace TwoPlayerChess.ClassLibrary
 {
     public class Bishop : Piece
     {
-        public Bishop(GameColors color, PieceType name, Player owner)
+        public Bishop(GameColors color, PieceType name, Player owner, Board board)
         {
             Color = color;
             Name = name;
             Owner = owner;
+            Board = board;
         }
     }
 }

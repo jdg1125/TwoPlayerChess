@@ -11,6 +11,15 @@ namespace TwoPlayerChess.ClassLibrary
         public Board Board { get; set; }
         public GameColors Color { get; private set; }
 
+        public PlayerStatus Status { get; private set; }
+
+        public Player(GameColors color)
+        {
+            Color = color;
+            Pieces = new Dictionary<Piece, int[]>(16);
+            Status = PlayerStatus.Playing;
+        }
+
         private bool IsInCheck()
         {
             return false;
@@ -26,33 +35,121 @@ namespace TwoPlayerChess.ClassLibrary
             return true;
         }
 
-        private bool TryParseInput(string input, out int[][] move)
-        {
-            move = new int[2][];
-            return true;
-        }
+
 
         public void RemovePiece(Piece victim)
         {
-            if(Pieces.ContainsKey(victim)) {
+            if (Pieces.ContainsKey(victim))
+            {
                 Pieces.Remove(victim);
             }
         }
-        public PlayerStatus Play()
+        public void Play()
         {
-            return PlayerStatus.Playing;
+            bool wasMoveMade = false;
+
+            while (!wasMoveMade)
+            {
+                Move move = GetUserInput();
+                if (move == null)
+                {
+                    return;
+                }
+
+                if(Board.IsLegalMove(move))
+                {
+                    Board.ExecuteMove(move);
+                    wasMoveMade = true;
+                }
+                //Console.WriteLine("in play: {0}, {1}", move[0][0] + ", " + move[0][1], move[1][0] + ", " + move[1][1]);
+
+            }
         }
 
-
-        public Player(GameColors color)
+        private Move GetUserInput()
         {
-            Color = color;
-            Pieces = new Dictionary<Piece, int[]>(16);
+            string[] positions;
+            Move move;
+
+            while (true)
+            {
+                do
+                {
+                    Console.Write("{0} player's turn. Specify your move, then press ENTER: ", Color);
+                    string input = Console.ReadLine();
+                    if (input.Contains("EXIT") || input.Contains("DRAW"))
+                    {
+                        if (input.Contains("DRAW"))
+                        {
+                            this.Status = PlayerStatus.Draw;
+                        }
+                        else
+                        {
+                            this.Status = PlayerStatus.None;
+                        }
+                        return null;
+                    }
+
+                    positions = input.Split(" ", StringSplitOptions.RemoveEmptyEntries);
+                } while (positions == null || positions.Length != 2);
+
+                if (positions[0].Length == 2 && positions[1].Length == 2)
+                {
+                    if (TryParseInput(positions, out move))
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Invalid move. Try again: ");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Invalid move. Try again: ");
+                }
+
+            }
+
+            return move;
+        }
+
+        private bool TryParseInput(string[] positions, out Move move)
+        {
+            string startPos = positions[0];
+            string endPos = positions[1];
+            int startRank, endRank;
+            int startFile, endFile;
+
+            bool foundStartRank = Int32.TryParse(startPos[0].ToString(), out startRank);
+            bool foundEndRank = Int32.TryParse(endPos[0].ToString(), out endRank);
+            foundStartRank = foundEndRank && startRank > 0 && startRank <= Board.TotalRanks;
+            foundEndRank = foundEndRank && endRank > 0 && endRank <= Board.TotalRanks;
+
+            startFile = startPos[1] - 'a';
+            endFile = endPos[1] - 'a';
+
+            bool foundStartFile = startFile >= 0 && startFile < Board.TotalFiles;
+            bool foundEndFile = endFile >= 0 && endFile < Board.TotalFiles;
+            bool arePositionsUnique = startRank == endRank ? startFile != endFile : true;
+
+            if (foundStartRank && foundEndRank && foundStartFile && foundEndFile && arePositionsUnique)
+            {
+                startRank = Board.TotalRanks - startRank;
+                endRank = Board.TotalRanks - endRank;
+                move = new Move(startRank, startFile, endRank, endFile);
+                return true;
+            }
+
+            move = null;
+            return false;
         }
     }
 
-    public enum PlayerStatus {
-        Playing, 
+    public enum PlayerStatus
+    {
+        None,
+        Playing,
         Checkmate,
         Stalemate,
         Draw
@@ -61,6 +158,6 @@ namespace TwoPlayerChess.ClassLibrary
     public enum GameColors
     {
         White,
-        Green
+        Black
     }
 }
