@@ -75,7 +75,7 @@ namespace TwoPlayerChess.ClassLibrary
             {
                 do
                 {
-                    Console.Write("{0} player's turn. Specify your move, then press ENTER: ", Color);
+                    Console.Write("{0}'s turn. Specify your move, then press ENTER: ", Color);
                     string input = Console.ReadLine();
                     if (input.Contains("EXIT") || input.Contains("DRAW"))
                     {

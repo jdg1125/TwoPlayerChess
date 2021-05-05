@@ -30,7 +30,8 @@ namespace TwoPlayerChess.ClassLibrary
 
         public void Capture(Piece victim)
         {
-
+            Player opponent = Board.Players[(int)victim.Color];
+            opponent.Pieces.Remove(victim);
         }
 
         public override string ToString()

@@ -8,11 +8,11 @@ namespace TwoPlayerChess.ClassLibrary
     {
         public const int TotalRanks = 8;
         public const int TotalFiles = 8;
-        private Player[] players;
+        public Player[] Players;
         public Piece[][] Pieces { get; set; }
         public Game Game { get; set; }
 
-        public Board(Player[] players, Game game)
+        public Board(Game game)
         {
             Pieces = new Piece[TotalRanks][];
             for (int i = 0; i < TotalRanks; i++)
@@ -20,7 +20,7 @@ namespace TwoPlayerChess.ClassLibrary
                 Pieces[i] = new Piece[TotalFiles];
             }
 
-            this.players = players;
+            Players = game.Players;
             Game = game;
 
             Setup();
@@ -28,10 +28,10 @@ namespace TwoPlayerChess.ClassLibrary
 
         private void Setup()
         {
-            AssignPieces(players[0], true);
-            AssignPieces(players[1], false);
-            players[0].Board = this;
-            players[1].Board = this;
+            AssignPieces(Players[0], true);
+            AssignPieces(Players[1], false);
+            Players[0].Board = this;
+            Players[1].Board = this;
         }
 
         private void AssignPieces(Player player, bool isWhite)
@@ -85,7 +85,7 @@ namespace TwoPlayerChess.ClassLibrary
         public bool IsLegalMove(Move move)
         {
             var piece = Pieces[move.StartRank][move.StartFile];
-            if(piece == null || piece.Color != players[Game.WhoseTurn].Color)  //you can only move your own piece
+            if(piece == null || piece.Color != Players[Game.WhoseTurn].Color)  //you can only move your own piece
             {
                 return false;
             }
@@ -105,7 +105,7 @@ namespace TwoPlayerChess.ClassLibrary
                 moved.Capture(captured);
             }
 
-            players[(int)moved.Color].Pieces[moved] = new int[2] { move.EndRank, move.EndFile };
+            Players[(int)moved.Color].Pieces[moved] = new int[2] { move.EndRank, move.EndFile };
         }
         public void Draw()
         {
@@ -153,7 +153,7 @@ namespace TwoPlayerChess.ClassLibrary
             {
                 sb.AppendFormat("    {0}\t", (char)('a' + i));
             }
-            sb.AppendFormat("\n\n\t White in check: {0}. Black in check: {1}", players[0].King.IsInCheck, players[1].King.IsInCheck);
+            sb.AppendFormat("\n\n\t White in check: {0}. Black in check: {1}", Players[0].King.IsInCheck, Players[1].King.IsInCheck);
             sb.Append("\n\n");
             Console.WriteLine(sb.ToString());
 

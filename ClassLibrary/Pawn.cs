@@ -29,11 +29,29 @@ namespace TwoPlayerChess.ClassLibrary
 
         private bool IsRankValid(Move move, out bool tookTwoSteps)
         {
+            if(move.StartRank == move.EndRank)
+            {
+                tookTwoSteps = false;
+                return false;
+            }
+
             if (TimesMoved == 0)
             {
                 bool white = Owner.Color == GameColors.White && (move.StartRank - move.EndRank <= 2);
                 bool black = Owner.Color == GameColors.Black && (move.EndRank - move.StartRank <= 2);
-                tookTwoSteps = true;
+
+                if (white)
+                {
+                    tookTwoSteps = move.StartRank - move.EndRank == 2;
+                }
+                else if (black)
+                {
+                    tookTwoSteps = move.EndRank - move.StartRank == 2;
+                }
+                else
+                {
+                    tookTwoSteps = false;
+                }
                 return white || black;
             }
             else

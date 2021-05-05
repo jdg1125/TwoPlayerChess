@@ -19,7 +19,7 @@ namespace TwoPlayerChess.ClassLibrary
             WhoseTurn = 0;
             Players[0] = new Player(GameColors.White);
             Players[1] = new Player(GameColors.Black);
-            Board = new Board(Players, this);
+            Board = new Board(this);
         }
 
         public Player SwitchPlayers()
