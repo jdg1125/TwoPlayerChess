@@ -67,14 +67,14 @@ namespace TwoPlayerChess.ClassLibrary
             int rankDiff = move.EndRank - move.StartRank;
             int fileDiff = move.EndFile - move.StartFile;
 
-            if ((rankDiff == -1 || rankDiff == 1) && (fileDiff == -1 || fileDiff == 1))
+            if ((rankDiff >= -1 && rankDiff <= 1) && (fileDiff >= -1 && fileDiff <= 1))
             {
                 Piece target = Board.Pieces[move.EndRank][move.EndFile];
                 if (target != null && target.Color == Color || target is King)
                 {
                     return false;
                 }
-                return IsInCheck(new int[2] { move.EndRank, move.EndFile });
+                return IsInCheck(new int[2] { move.EndRank, move.EndFile }) == false;
             }
 
             else if (rankDiff == 0 && (fileDiff == 2 || fileDiff == -2))
@@ -103,7 +103,7 @@ namespace TwoPlayerChess.ClassLibrary
                     int[] testSquare = new int[2] { move.StartRank, move.StartFile + fileDiff / 2 };  //test square adjacent to king is not under attack
                     bool tryOneStep = IsInCheck(testSquare);
                     testSquare[1] += fileDiff / 2;      //test square two steps away is not under attack
-                    return tryOneStep && IsInCheck(testSquare);
+                    return (tryOneStep || IsInCheck(testSquare)) == false;
                 }
             }
             return false;
@@ -123,14 +123,14 @@ namespace TwoPlayerChess.ClassLibrary
         {
             int[] location = Owner.Pieces[this];
 
-            bool testForCheck = CheckForKnights(location) || CheckForPawns(location) || CheckForBishops(location) || CheckForRooks(location);
+            bool testForCheck = TestForKnights(location) || TestForPawns(location) || TestForBishops(location) || TestForRooks(location);
 
             return testForCheck;
         }
 
         private bool IsInCheck(int[] location)
         {
-            bool testForCheck = CheckForKnights(location) || CheckForPawns(location) || CheckForBishops(location) || CheckForRooks(location);
+            bool testForCheck = TestForKnights(location) || TestForPawns(location) || TestForBishops(location) || TestForRooks(location);
 
             return testForCheck;
         }
@@ -148,7 +148,7 @@ namespace TwoPlayerChess.ClassLibrary
             }
         }
 
-        private bool CheckForKnights(int[] location)
+        private bool TestForKnights(int[] location)
         {
             int[] offsets = new int[4] { -2, -1, 2, 1 };
             for (int i = 0; i < offsets.Length; i++)
@@ -176,7 +176,7 @@ namespace TwoPlayerChess.ClassLibrary
             return false;
         }
 
-        private bool CheckForPawns(int[] location)
+        private bool TestForPawns(int[] location)
         {
             int[] leftAttack, rightAttack;
 
@@ -214,17 +214,17 @@ namespace TwoPlayerChess.ClassLibrary
             return false;
         }
 
-        private bool CheckForBishops(int[] location)
+        private bool TestForBishops(int[] location)
         {
-            bool path1 = BishopCheckHelper(location[0] + 1, location[1] + 1, new int[2] { 1, 1 });
-            bool path2 = BishopCheckHelper(location[0] + 1, location[1] - 1, new int[2] { 1, -1 });
-            bool path3 = BishopCheckHelper(location[0] - 1, location[1] + 1, new int[2] { -1, 1 });
-            bool path4 = BishopCheckHelper(location[0] - 1, location[1] - 1, new int[2] { -1, -1 });
+            bool path1 = TestPath<Bishop>(location[0] + 1, location[1] + 1, new int[2] { 1, 1 });
+            bool path2 = TestPath<Bishop>(location[0] + 1, location[1] - 1, new int[2] { 1, -1 });
+            bool path3 = TestPath<Bishop>(location[0] - 1, location[1] + 1, new int[2] { -1, 1 });
+            bool path4 = TestPath<Bishop>(location[0] - 1, location[1] - 1, new int[2] { -1, -1 });
 
             return path1 || path2 || path3 || path4;
         }
 
-        private bool BishopCheckHelper(int rank, int file, int[] direction)
+        private bool TestPath<T>(int rank, int file, int[] direction)
         {
             if (rank < 0 || file < 0 || rank == Board.TotalRanks || file == Board.TotalFiles)
             {
@@ -233,7 +233,7 @@ namespace TwoPlayerChess.ClassLibrary
 
             var piece = Board.Pieces[rank][file];
 
-            if (piece != null && (piece is Bishop || piece is Queen) && piece.Color != Color)
+            if (piece != null && (piece is T || piece is Queen) && piece.Color != Color)
             {
                 return true;
             }
@@ -245,41 +245,18 @@ namespace TwoPlayerChess.ClassLibrary
             rank += direction[0];
             file += direction[1];
 
-            return BishopCheckHelper(rank, file, direction);
+            return TestPath<T>(rank, file, direction);
         }
 
-        private bool CheckForRooks(int[] location)
+        private bool TestForRooks(int[] location)
         {
-            bool path1 = RookCheckHelper(location[0] + 1, location[1], new int[2] { 1, 0 });
-            bool path2 = RookCheckHelper(location[0], location[1] + 1, new int[2] { 0, 1 });
-            bool path3 = RookCheckHelper(location[0] - 1, location[1], new int[2] { -1, 0 });
-            bool path4 = RookCheckHelper(location[0], location[1] - 1, new int[2] { 0, -1 });
+            bool path1 = TestPath<Rook>(location[0] + 1, location[1], new int[2] { 1, 0 });
+            bool path2 = TestPath<Rook>(location[0], location[1] + 1, new int[2] { 0, 1 });
+            bool path3 = TestPath<Rook>(location[0] - 1, location[1], new int[2] { -1, 0 });
+            bool path4 = TestPath<Rook>(location[0], location[1] - 1, new int[2] { 0, -1 });
 
             return path1 || path2 || path3 || path4;
         }
 
-        private bool RookCheckHelper(int rank, int file, int[] direction)
-        {
-            if (rank < 0 || file < 0 || rank == Board.TotalRanks || file == Board.TotalFiles)
-            {
-                return false;
-            }
-
-            var piece = Board.Pieces[rank][file];
-
-            if (piece != null && (piece is Rook || piece is Queen) && piece.Color != Color)
-            {
-                return true;
-            }
-            else if (piece != null)
-            {
-                return false;
-            }
-
-            rank += direction[0];
-            file += direction[1];
-
-            return RookCheckHelper(rank, file, direction);
-        }
     }
 }

@@ -6,7 +6,7 @@ namespace TwoPlayerChess.ClassLibrary
 {
     public class Pawn : Piece
     {
-      
+
         public Pawn(Player owner, Board board)
         {
             Color = owner.Color;
@@ -32,7 +32,7 @@ namespace TwoPlayerChess.ClassLibrary
 
         private bool IsRankValid(Move move, out bool tookTwoSteps)
         {
-            if(move.StartRank == move.EndRank)
+            if (move.StartRank == move.EndRank)
             {
                 tookTwoSteps = false;
                 return false;
@@ -40,8 +40,8 @@ namespace TwoPlayerChess.ClassLibrary
 
             if (TimesMoved == 0)
             {
-                bool white = Owner.Color == GameColors.White && (move.StartRank - move.EndRank <= 2);
-                bool black = Owner.Color == GameColors.Black && (move.EndRank - move.StartRank <= 2);
+                bool white = Owner.Color == GameColors.White && (move.StartRank - move.EndRank <= 2) && (move.StartRank - move.EndRank > 0);
+                bool black = Owner.Color == GameColors.Black && (move.EndRank - move.StartRank <= 2) && (move.EndRank - move.StartRank > 0);
 
                 if (white)
                 {
@@ -59,8 +59,8 @@ namespace TwoPlayerChess.ClassLibrary
             }
             else
             {
-                bool white = Owner.Color == GameColors.White && (move.StartRank - move.EndRank <= 1);
-                bool black = Owner.Color == GameColors.Black && (move.EndRank - move.StartRank <= 1);
+                bool white = Owner.Color == GameColors.White && (move.StartRank - move.EndRank <= 1) && (move.StartRank - move.EndRank > 0);
+                bool black = Owner.Color == GameColors.Black && (move.EndRank - move.StartRank <= 1) && (move.EndRank - move.StartRank > 0);
                 tookTwoSteps = false;
                 return white || black;
             }
@@ -68,11 +68,11 @@ namespace TwoPlayerChess.ClassLibrary
 
         private bool IsFileValid(Move move, bool tookTwoSteps)
         {
-            if(tookTwoSteps)
+            if (tookTwoSteps)
             {
-                if(move.StartFile == move.EndFile)  //can only take forward leaps
+                if (move.StartFile == move.EndFile)  //can only take forward leaps
                 {
-                    if(this.Color == GameColors.White) //spaces moving to and over must be empty
+                    if (this.Color == GameColors.White) //spaces moving to and over must be empty
                     {
                         return Board.Pieces[move.StartRank - 1][move.StartFile] == null && Board.Pieces[move.StartRank - 2][move.StartFile] == null;
                     }
@@ -86,7 +86,7 @@ namespace TwoPlayerChess.ClassLibrary
             else
             {
                 bool triedCapture = (move.EndFile == move.StartFile - 1) || (move.EndFile == move.StartFile + 1);
-                if(!triedCapture)
+                if (!triedCapture)
                 {
                     return move.StartFile == move.EndFile && Board.Pieces[move.EndRank][move.EndFile] == null;  //moved forward one square - nobody there
                 }
