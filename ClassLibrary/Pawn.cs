@@ -18,12 +18,15 @@ namespace TwoPlayerChess.ClassLibrary
 
         public override bool IsMoveLegal(Move move)  //by the time the move gets here, we're sure it's within board bounds
         {
+            Piece target = Board.Pieces[move.EndRank][move.EndFile];
+
+            if (target != null && (target.Color == Color || target is King))
+            {
+                return false;
+            }
+
             bool tookTwoSteps;
             bool isValid = IsRankValid(move, out tookTwoSteps) && IsFileValid(move, tookTwoSteps);
-            if (isValid)
-            {
-                TimesMoved++;
-            }
             return isValid;
         }
 

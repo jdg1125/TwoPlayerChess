@@ -89,12 +89,18 @@ namespace TwoPlayerChess.ClassLibrary
             {
                 return false;
             }
+
+            if(piece is King)
+            {
+                return (piece as King).TryToMove(move); //king executes his own moves
+            }
+
             bool isLegal = piece.IsMoveLegal(move);
 
             if(isLegal)
             {
                 Piece captured = StageMove(move);
-                isLegal = Players[(int)piece.Color].King.IsInCheck(false);
+                isLegal = Players[(int)piece.Color].King.IsInCheck() == false;
 
                 if (isLegal)
                 {
@@ -108,7 +114,7 @@ namespace TwoPlayerChess.ClassLibrary
             return isLegal;
         }
 
-        private void ExecuteMove(Move move, Piece captured)
+        public void ExecuteMove(Move move, Piece captured)
         {
             var moved = Pieces[move.EndRank][move.EndFile];
 
@@ -121,12 +127,12 @@ namespace TwoPlayerChess.ClassLibrary
             Players[(int)moved.Color].Pieces[moved] = new int[2] { move.EndRank, move.EndFile };
         }
 
-        private Piece StageMove(Move move)
+        public Piece StageMove(Move move)
         {
             var moved = Pieces[move.StartRank][move.StartFile];
             var captured = Pieces[move.EndRank][move.EndFile];
 
-            Pieces[move.EndRank][move.EndFile] = Pieces[move.StartRank][move.StartFile];
+            Pieces[move.EndRank][move.EndFile] = moved;
             Pieces[move.StartRank][move.StartFile] = null;
 
             return captured;
@@ -138,8 +144,6 @@ namespace TwoPlayerChess.ClassLibrary
             Pieces[move.StartRank][move.StartFile] = moved;
             Pieces[move.EndRank][move.EndFile] = captured;
         }
-
-       
         public void Draw()
         {
             StringBuilder sb = new StringBuilder();
@@ -186,8 +190,8 @@ namespace TwoPlayerChess.ClassLibrary
             {
                 sb.AppendFormat("    {0}\t", (char)('a' + i));
             }
-            sb.AppendFormat("\n\n\t White in check: {0}. Black in check: {1}", Players[0].King.Check, Players[1].King.Check);
-            sb.Append("\n\n");
+            //sb.AppendFormat("\n\n\t White in check: {0}. Black in check: {1}", Players[0].King.Check, Players[1].King.Check);
+            //sb.Append("\n\n");
             Console.WriteLine(sb.ToString());
 
         }

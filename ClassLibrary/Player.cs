@@ -20,22 +20,10 @@ namespace TwoPlayerChess.ClassLibrary
             Status = PlayerStatus.Playing;
         }
 
-        private bool IsInCheck()
-        {
-            return false;
-        }
-
         private bool AbleToMove()
         {
             return true;
         }
-
-        private bool AttemptMove(int[] startPos, int[] endPos)
-        {
-            return true;
-        }
-
-
 
         public void RemovePiece(Piece victim)
         {
@@ -46,7 +34,10 @@ namespace TwoPlayerChess.ClassLibrary
         }
         public void Play()
         {
-            if (King.IsInCheck(true))
+            bool isInCheck = King.IsInCheck();
+            King.UpdateCheckStatus(isInCheck);
+
+            if (isInCheck)
             {
                 if (!AbleToMove())
                 {
@@ -62,6 +53,8 @@ namespace TwoPlayerChess.ClassLibrary
                     return;
                 }
             }
+
+            Console.WriteLine("\n\t {0} in check: {1}\n", Color, King.Check);
 
             bool wasMoveMade = false;
             while (!wasMoveMade)

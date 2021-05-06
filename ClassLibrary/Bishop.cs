@@ -16,7 +16,9 @@ namespace TwoPlayerChess.ClassLibrary
 
         public override bool IsMoveLegal(Move move)
         {
-            if (Board.Pieces[move.EndRank][move.EndFile] != null && Board.Pieces[move.EndRank][move.EndFile].Color == Color)
+            Piece target = Board.Pieces[move.EndRank][move.EndFile];
+
+            if (target != null && (target.Color == Color || target is King))
             {
                 return false;
             }

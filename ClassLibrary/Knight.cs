@@ -18,7 +18,7 @@ namespace TwoPlayerChess.ClassLibrary
         {
             Piece target = Board.Pieces[move.EndRank][move.EndFile];
             
-            if (target != null && target.Color == Color)
+            if (target != null && (target.Color == Color || target is King))
             {
                 return false;
             }
