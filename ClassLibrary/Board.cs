@@ -40,21 +40,21 @@ namespace TwoPlayerChess.ClassLibrary
 
             for (int i = 0; i < TotalFiles; i++)
             {
-                var pawn = new Pawn(player.Color, PieceType.Pn, player, this);
+                var pawn = new Pawn(player, this);
                 Pieces[pawnRank][i] = pawn;
                 player.Pieces.Add(pawn, new int[2] { pawnRank, i });
             }
 
             int kingRank = isWhite ? TotalRanks - 1 : 0;
 
-            var rook1 = new Rook(player.Color, PieceType.Rk, player, this);
-            var rook2 = new Rook(player.Color, PieceType.Rk, player, this);
-            var knight1 = new Knight(player.Color, PieceType.Kt, player, this);
-            var knight2 = new Knight(player.Color, PieceType.Kt, player, this);
-            var bishop1 = new Bishop(player.Color, PieceType.Bp, player, this);
-            var bishop2 = new Bishop(player.Color, PieceType.Bp, player, this);
-            var queen = new Queen(player.Color, PieceType.Qn, player, this);
-            var king = new King(player.Color, PieceType.Kg, player, this);
+            var rook1 = new Rook(player, this);
+            var rook2 = new Rook(player, this);
+            var knight1 = new Knight(player, this);
+            var knight2 = new Knight(player, this);
+            var bishop1 = new Bishop(player, this);
+            var bishop2 = new Bishop(player, this);
+            var queen = new Queen(player, this);
+            var king = new King(player, this);
 
             Pieces[kingRank][0] = rook1;
             player.Pieces.Add(rook1, new int[2] { kingRank, 0 });
@@ -82,31 +82,64 @@ namespace TwoPlayerChess.ClassLibrary
             player.King = king;
         }
 
-        public bool IsLegalMove(Move move)
+        public bool TryToMove(Move move)
         {
             var piece = Pieces[move.StartRank][move.StartFile];
             if(piece == null || piece.Color != Players[Game.WhoseTurn].Color)  //you can only move your own piece
             {
                 return false;
             }
-            return piece.TryMove(move);
+            bool isLegal = piece.IsMoveLegal(move);
+
+            if(isLegal)
+            {
+                Piece captured = StageMove(move);
+                isLegal = Players[(int)piece.Color].King.IsInCheck(false);
+
+                if (isLegal)
+                {
+                    ExecuteMove(move, captured);
+                }
+                else
+                {
+                    RevertMove(move, captured);
+                }
+            }
+            return isLegal;
         }
 
-        public void ExecuteMove(Move move)
+        private void ExecuteMove(Move move, Piece captured)
         {
-            var moved = Pieces[move.StartRank][move.StartFile];
-            var captured = Pieces[move.EndRank][move.EndFile];
-            
-            Pieces[move.EndRank][move.EndFile] = Pieces[move.StartRank][move.StartFile];
-            Pieces[move.StartRank][move.StartFile] = null;
+            var moved = Pieces[move.EndRank][move.EndFile];
 
             if(captured != null)
             {
                 moved.Capture(captured);
             }
 
+            moved.TimesMoved++;
             Players[(int)moved.Color].Pieces[moved] = new int[2] { move.EndRank, move.EndFile };
         }
+
+        private Piece StageMove(Move move)
+        {
+            var moved = Pieces[move.StartRank][move.StartFile];
+            var captured = Pieces[move.EndRank][move.EndFile];
+
+            Pieces[move.EndRank][move.EndFile] = Pieces[move.StartRank][move.StartFile];
+            Pieces[move.StartRank][move.StartFile] = null;
+
+            return captured;
+        }
+
+        private void RevertMove(Move move, Piece captured)
+        {
+            var moved = Pieces[move.EndRank][move.EndFile];
+            Pieces[move.StartRank][move.StartFile] = moved;
+            Pieces[move.EndRank][move.EndFile] = captured;
+        }
+
+       
         public void Draw()
         {
             StringBuilder sb = new StringBuilder();
@@ -153,7 +186,7 @@ namespace TwoPlayerChess.ClassLibrary
             {
                 sb.AppendFormat("    {0}\t", (char)('a' + i));
             }
-            sb.AppendFormat("\n\n\t White in check: {0}. Black in check: {1}", Players[0].King.IsInCheck, Players[1].King.IsInCheck);
+            sb.AppendFormat("\n\n\t White in check: {0}. Black in check: {1}", Players[0].King.Check, Players[1].King.Check);
             sb.Append("\n\n");
             Console.WriteLine(sb.ToString());
 

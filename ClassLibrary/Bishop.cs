@@ -6,15 +6,15 @@ namespace TwoPlayerChess.ClassLibrary
 {
     public class Bishop : Piece
     {
-        public Bishop(GameColors color, PieceType name, Player owner, Board board)
+        public Bishop(Player owner, Board board)
         {
-            Color = color;
-            Name = name;
+            Color = owner.Color;
             Owner = owner;
             Board = board;
+            Name = PieceType.Bp;
         }
 
-        public override bool TryMove(Move move)
+        public override bool IsMoveLegal(Move move)
         {
             if (Board.Pieces[move.EndRank][move.EndFile] != null && Board.Pieces[move.EndRank][move.EndFile].Color == Color)
             {
@@ -25,29 +25,29 @@ namespace TwoPlayerChess.ClassLibrary
             {
                 if (move.EndFile > move.StartFile)
                 {
-                    return TestPath(move, move.StartRank + 1, move.StartFile + 1, BishopPathOptions.IncXIncY);
+                    return TestPath(move, move.StartRank + 1, move.StartFile + 1, new int[] { 1, 1 });
                 }
                 else if (move.EndFile < move.StartFile)
                 {
-                    return TestPath(move, move.StartRank + 1, move.StartFile - 1, BishopPathOptions.IncXDecY);
+                    return TestPath(move, move.StartRank + 1, move.StartFile - 1, new int[] { 1, -1 });
                 }
             }
             else if (move.EndRank < move.StartRank)
             {
                 if (move.EndFile > move.StartFile)
                 {
-                    return TestPath(move, move.StartRank - 1, move.StartFile + 1, BishopPathOptions.DecXIncY);
+                    return TestPath(move, move.StartRank - 1, move.StartFile + 1, new int[] { -1, 1 });
                 }
                 else if (move.EndFile < move.StartFile)
                 {
-                    return TestPath(move, move.StartRank - 1, move.StartFile - 1, BishopPathOptions.DecXDecY);
+                    return TestPath(move, move.StartRank - 1, move.StartFile - 1, new int[] { -1, -1 });
                 }
             }
 
             return false;
         }
 
-        private bool TestPath(Move move, int rank, int file, BishopPathOptions trajectory)
+        private bool TestPath(Move move, int rank, int file, int[] direction)
         {
             if (rank == move.EndRank || file == move.EndFile)
             {
@@ -56,18 +56,10 @@ namespace TwoPlayerChess.ClassLibrary
             
             bool isEmpty = Board.Pieces[rank][file] == null;
 
-            rank = trajectory == BishopPathOptions.IncXIncY || trajectory == BishopPathOptions.IncXDecY ? rank + 1 : rank - 1;
-            file = trajectory == BishopPathOptions.IncXIncY || trajectory == BishopPathOptions.DecXIncY ? file + 1 : file - 1;
+            rank += direction[0];
+            file += direction[1];
 
-            return isEmpty && TestPath(move, rank, file, trajectory);
+            return isEmpty && TestPath(move, rank, file, direction);
         }
-    }
-
-    enum BishopPathOptions
-    {
-        IncXIncY,
-        IncXDecY,
-        DecXIncY,
-        DecXDecY
     }
 }

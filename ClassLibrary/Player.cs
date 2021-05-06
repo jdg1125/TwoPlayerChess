@@ -46,21 +46,34 @@ namespace TwoPlayerChess.ClassLibrary
         }
         public void Play()
         {
-            bool wasMoveMade = false;
+            if (King.IsInCheck(true))
+            {
+                if (!AbleToMove())
+                {
+                    Status = PlayerStatus.Checkmate;
+                    return;
+                }
+            }
+            else
+            {
+                if (!AbleToMove())
+                {
+                    Status = PlayerStatus.Stalemate;
+                    return;
+                }
+            }
 
+            bool wasMoveMade = false;
             while (!wasMoveMade)
             {
                 Move move = GetUserInput();
-                if (move == null)
+                if (move == null)           //user entered EXIT or DRAW
                 {
                     return;
                 }
 
-                if(Board.IsLegalMove(move))
-                {
-                    Board.ExecuteMove(move);
-                    wasMoveMade = true;
-                }
+                wasMoveMade = Board.TryToMove(move);
+
                 //Console.WriteLine("in play: {0}, {1}", move[0][0] + ", " + move[0][1], move[1][0] + ", " + move[1][1]);
 
             }

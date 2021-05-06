@@ -8,6 +8,7 @@ namespace TwoPlayerChess.ClassLibrary
     {
         public Player Owner { get; protected set; }
 
+        public int TimesMoved { get; set; }
         public Board Board { get; protected set; }
 
         public GameColors Color { get; protected set; }
@@ -18,7 +19,7 @@ namespace TwoPlayerChess.ClassLibrary
             return false;
         }
 
-        public virtual bool TryMove(Move move)
+        public virtual bool IsMoveLegal(Move move)
         {
             return false;
         }

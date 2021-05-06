@@ -6,17 +6,17 @@ namespace TwoPlayerChess.ClassLibrary
 {
     public class Pawn : Piece
     {
-        public int TimesMoved { get; private set; }
-        public Pawn(GameColors color, PieceType name, Player owner, Board board)
+      
+        public Pawn(Player owner, Board board)
         {
-            Color = color;
-            Name = name;
+            Color = owner.Color;
+            Name = PieceType.Pn;
             Owner = owner;
             TimesMoved = 0;
             Board = board;
         }
 
-        public override bool TryMove(Move move)  //by the time the move gets here, we're sure it's within board bounds
+        public override bool IsMoveLegal(Move move)  //by the time the move gets here, we're sure it's within board bounds
         {
             bool tookTwoSteps;
             bool isValid = IsRankValid(move, out tookTwoSteps) && IsFileValid(move, tookTwoSteps);

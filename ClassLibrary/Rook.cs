@@ -6,17 +6,16 @@ namespace TwoPlayerChess.ClassLibrary
 {
     public class Rook : Piece
     {
-        public int TimesMoved { get; private set; }
-        public Rook(GameColors color, PieceType name, Player owner, Board board)
+        public Rook(Player owner, Board board)
         {
-            Color = color;
-            Name = name;
+            Color = owner.Color;
+            Name = PieceType.Rk;
             Owner = owner;
             TimesMoved = 0;
             Board = board;
         }
 
-        public override bool TryMove(Move move)
+        public override bool IsMoveLegal(Move move)
         {
             bool alongRank = move.StartRank == move.EndRank;
             bool alongFile = move.StartFile == move.EndFile;
@@ -31,11 +30,11 @@ namespace TwoPlayerChess.ClassLibrary
             {
                 if(move.EndFile > move.StartFile)
                 {
-                    isValid = TestPath(move, move.StartFile + 1, RookPathOptions.IncY);
+                    isValid = TestPath(move, move.StartRank, move.StartFile + 1, new int[] { 0, 1 });
                 }
                 else
                 {
-                    isValid = TestPath(move, move.StartFile - 1, RookPathOptions.DecY);
+                    isValid = TestPath(move, move.StartRank, move.StartFile - 1, new int[] { 0, -1 });
                 }
                 
             }
@@ -43,11 +42,11 @@ namespace TwoPlayerChess.ClassLibrary
             {
                 if(move.EndRank > move.StartRank)
                 {
-                    isValid = TestPath(move, move.StartRank + 1, RookPathOptions.IncX);
+                    isValid = TestPath(move, move.StartRank + 1, move.StartFile, new int[] { 1, 0 });
                 }
                 else
                 {
-                    isValid = TestPath(move, move.StartRank - 1, RookPathOptions.DecX);
+                    isValid = TestPath(move, move.StartRank - 1, move.StartFile, new int[] { -1, 0 });
                 }
             }
 
@@ -58,42 +57,36 @@ namespace TwoPlayerChess.ClassLibrary
             return isValid;
         }
 
-        private bool TestPath(Move move, int index, RookPathOptions trajectory)
+        private bool TestPath(Move move, int rank, int file, int[] direction)
         {
-            if(trajectory == RookPathOptions.IncX || trajectory == RookPathOptions.DecX)
+            bool isEmpty = false;
+
+            if(direction[1] == 0)
             {
-                if (index == move.EndRank)
+                if (rank == move.EndRank)
                 {
                     return true;
                 }
                 else
                 {
-                    bool isEmpty = Board.Pieces[index][move.StartFile] == null;
-                    index = trajectory == RookPathOptions.IncX ? index + 1 : index - 1;
-                    return isEmpty && TestPath(move, index, trajectory);
+                    isEmpty = Board.Pieces[rank][move.StartFile] == null;
                 }
             }
             else
             {
-                if(index == move.EndFile)
+                if(file == move.EndFile)
                 {
                     return true;
                 }
                 else
                 {
-                    bool isEmpty = Board.Pieces[move.StartRank][index] == null;
-                    index = trajectory == RookPathOptions.IncY ? index + 1 : index - 1;
-                    return isEmpty && TestPath(move, index, trajectory);
+                    isEmpty = Board.Pieces[move.StartRank][file] == null;
                 }
             }
-        }
-    }
 
-    enum RookPathOptions
-    {
-        IncX, 
-        DecX, 
-        IncY, 
-        DecY
+            rank += direction[0];
+            file += direction[1];
+            return isEmpty && TestPath(move, rank, file, direction);
+        }
     }
 }
