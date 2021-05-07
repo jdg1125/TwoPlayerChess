@@ -35,15 +35,6 @@ namespace TwoPlayerChess.ClassLibrary
             Board.DisplayBoard();
             Console.WriteLine();
 
-            foreach (var player in Players)
-            {
-                Console.WriteLine("Color {0}", player.Color);
-                foreach (var piece in player.Pieces.Keys)
-                {
-                    Console.Write("{0}, ({1});   ", piece, player.Pieces[piece][0] + ", " + player.Pieces[piece][1]);
-                }
-                Console.WriteLine("\n");
-            }
         }
 
         public bool IsGameOver()
