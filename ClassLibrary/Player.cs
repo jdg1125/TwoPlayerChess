@@ -24,7 +24,9 @@ namespace TwoPlayerChess.ClassLibrary
         {
             foreach(var piece in Pieces.Keys)
             {
-                if(piece.HasLegalMoves())
+                bool test = piece.HasLegalMoves();
+                int[] coords = Pieces[piece];
+                if(test)
                 {
                     return true;
                 }
@@ -63,20 +65,51 @@ namespace TwoPlayerChess.ClassLibrary
 
             Console.WriteLine("\n\t {0} in check: {1}\n", Color, King.Check);
 
-            bool wasMoveMade = false;
-            while (!wasMoveMade)
+            while (true)
             {
                 Move move = GetUserInput();
                 if (move == null)           //user entered EXIT or DRAW
                 {
                     return;
                 }
-
-                wasMoveMade = Board.TryToMove(move);
-
-                //Console.WriteLine("in play: {0}, {1}", move[0][0] + ", " + move[0][1], move[1][0] + ", " + move[1][1]);
-
+                
+                if (TryToMove(move))
+                {
+                    return;
+                }
             }
+        }
+
+        private bool TryToMove(Move move)
+        {
+            var piece = Board.Pieces[move.StartRank][move.StartFile];
+            if (piece == null || piece.Color != Color)  //you can only move your own piece
+            {
+                return false;
+            }
+
+            if (piece is King)
+            {
+                return (piece as King).TryToMove(move); //king tests and executes his own moves
+            }
+
+            bool isLegal = piece.IsMoveLegal(move);
+
+            if (isLegal)
+            {
+                Piece captured = piece.StageMove(move);
+                isLegal = King.IsInCheck() == false;
+
+                if (isLegal)
+                {
+                    piece.ExecuteMove(move, captured);
+                }
+                else
+                {
+                    piece.RevertMove(move, captured);
+                }
+            }
+            return isLegal;
         }
 
         private Move GetUserInput()
@@ -102,7 +135,6 @@ namespace TwoPlayerChess.ClassLibrary
                         }
                         return null;
                     }
-
                     positions = input.Split(" ", StringSplitOptions.RemoveEmptyEntries);
                 } while (positions == null || positions.Length != 2);
 
@@ -112,16 +144,7 @@ namespace TwoPlayerChess.ClassLibrary
                     {
                         break;
                     }
-                    else
-                    {
-                        Console.WriteLine("Invalid move. Try again: ");
-                    }
                 }
-                else
-                {
-                    Console.WriteLine("Invalid move. Try again: ");
-                }
-
             }
 
             return move;

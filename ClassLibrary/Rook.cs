@@ -6,14 +6,10 @@ namespace TwoPlayerChess.ClassLibrary
 {
     public class Rook : Piece
     {
-        public Rook(Player owner, Board board)
+        public Rook(Player owner, Board board) : base(owner, board)
         {
-            Color = owner.Color;
             Name = PieceType.Rk;
-            Owner = owner;
-            TimesMoved = 0;
-            Board = board;
-            Directions = new int[4][] { new int[2] { 1, 0 }, new int[2] { -1, 0 }, new int[2] { 0, 1 }, new int[2] { 0, -1 } };
+            Directions = new int[4][] { new int[2] { 0, 1 }, new int[2] { 1, 0 }, new int[2] { 0, -1 }, new int[2] { -1, 0 } };
         }
 
         public override bool IsMoveLegal(Move move)
@@ -33,11 +29,11 @@ namespace TwoPlayerChess.ClassLibrary
             {
                 if (move.EndFile > move.StartFile)
                 {
-                    isValid = TestPath(move, move.StartRank, move.StartFile + 1, new int[] { 0, 1 });
+                    isValid = TestPath(move, move.StartRank, move.StartFile + 1, Directions[0]);
                 }
                 else
                 {
-                    isValid = TestPath(move, move.StartRank, move.StartFile - 1, new int[] { 0, -1 });
+                    isValid = TestPath(move, move.StartRank, move.StartFile - 1, Directions[2]);
                 }
 
             }
@@ -45,11 +41,11 @@ namespace TwoPlayerChess.ClassLibrary
             {
                 if (move.EndRank > move.StartRank)
                 {
-                    isValid = TestPath(move, move.StartRank + 1, move.StartFile, new int[] { 1, 0 });
+                    isValid = TestPath(move, move.StartRank + 1, move.StartFile, Directions[1]);
                 }
                 else
                 {
-                    isValid = TestPath(move, move.StartRank - 1, move.StartFile, new int[] { -1, 0 });
+                    isValid = TestPath(move, move.StartRank - 1, move.StartFile, Directions[3]);
                 }
             }
 

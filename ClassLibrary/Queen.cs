@@ -6,11 +6,8 @@ namespace TwoPlayerChess.ClassLibrary
 {
     public class Queen : Piece
     {
-        public Queen(Player owner, Board board)
+        public Queen(Player owner, Board board) : base(owner, board)
         {
-            Color = owner.Color;
-            Owner = owner;
-            Board = board;
             Name = PieceType.Qn;
             Directions = new int[8][] { new int[2] { 1, 1 }, new int[2] { 1, -1 }, new int[2] { -1, 1 }, new int[2] { -1, -1 }, 
                         new int[2] { 1, 0 }, new int[2] { -1, 0 }, new int[2] { 0, 1 }, new int[2] { 0, -1 } };
@@ -25,7 +22,7 @@ namespace TwoPlayerChess.ClassLibrary
             }
             else
             {
-                Bishop tmpBishop = new Bishop(Owner, Board);  //queen behaving like a rook
+                Bishop tmpBishop = new Bishop(Owner, Board);  //queen behaving like a bishop
                 return tmpBishop.IsMoveLegal(move);
             }
         }

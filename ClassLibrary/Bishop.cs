@@ -6,20 +6,17 @@ namespace TwoPlayerChess.ClassLibrary
 {
     public class Bishop : Piece
     {
-        public Bishop(Player owner, Board board)
+        public Bishop(Player owner, Board board) : base(owner, board)
         {
-            Color = owner.Color;
-            Owner = owner;
-            Board = board;
             Name = PieceType.Bp;
             Directions = new int[4][] { new int[2] { 1, 1 }, new int[2] { 1, -1 }, new int[2] { -1, 1 }, new int[2] { -1, -1 } };
         }
 
         public override bool IsMoveLegal(Move move)
         {
-            Piece target = Board.Pieces[move.EndRank][move.EndFile];
+            var piece = Board.Pieces[move.EndRank][move.EndFile];
 
-            if (target != null && (target.Color == Color || target is King))
+            if (piece != null && (piece.Color == Color || piece is King))
             {
                 return false;
             }
@@ -28,22 +25,22 @@ namespace TwoPlayerChess.ClassLibrary
             {
                 if (move.EndFile > move.StartFile)
                 {
-                    return TestPath(move, move.StartRank + 1, move.StartFile + 1, new int[] { 1, 1 });
+                    return TestPath(move, move.StartRank + 1, move.StartFile + 1, Directions[0]);
                 }
                 else if (move.EndFile < move.StartFile)
                 {
-                    return TestPath(move, move.StartRank + 1, move.StartFile - 1, new int[] { 1, -1 });
+                    return TestPath(move, move.StartRank + 1, move.StartFile - 1, Directions[1]);
                 }
             }
             else if (move.EndRank < move.StartRank)
             {
                 if (move.EndFile > move.StartFile)
                 {
-                    return TestPath(move, move.StartRank - 1, move.StartFile + 1, new int[] { -1, 1 });
+                    return TestPath(move, move.StartRank - 1, move.StartFile + 1, Directions[2]);
                 }
                 else if (move.EndFile < move.StartFile)
                 {
-                    return TestPath(move, move.StartRank - 1, move.StartFile - 1, new int[] { -1, -1 });
+                    return TestPath(move, move.StartRank - 1, move.StartFile - 1, Directions[3]);
                 }
             }
 
@@ -55,7 +52,7 @@ namespace TwoPlayerChess.ClassLibrary
             return GetAllRangeMoves(myPosition);
         }
 
-        private bool TestPath(Move move, int rank, int file, int[] direction)
+        private bool TestPath(Move move, int rank, int file, int[] direction)  //checks that the path described by move is free of other pieces
         {
             if (rank == move.EndRank || file == move.EndFile)
             {

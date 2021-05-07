@@ -16,23 +16,30 @@ namespace TwoPlayerChess.ClassLibrary
         public GameColors Color { get; protected set; }
         public PieceType Name { get; protected set; }
 
+        public Piece(Player owner, Board board)
+        {
+            Color = owner.Color;
+            Owner = owner;
+            Board = board;
+            TimesMoved = 0;
+        }
         public bool HasLegalMoves()                 //determines whether there exists a legal move that will not result in check or checkmate
         {
             var moveList = GetAllPossibleMoves(Owner.Pieces[this]);
             foreach(var move in moveList)
             {
-                Piece captured = Board.StageMove(move);
+                Piece captured = StageMove(move);
                 bool isLegal;
                 if(this is King)   //stage move doesn't update the coords of the piece in the player's Piece map
                 {
-                    isLegal = Board.Players[(int)Color].King.IsInCheck(new int[] { move.EndRank, move.EndFile }) == false;  //pass in the staged postion
+                    isLegal = (this as King).IsInCheck(new int[] { move.EndRank, move.EndFile }) == false;  //pass in the staged postion
                 }
                 else
                 {
-                    isLegal = Board.Players[(int)Color].King.IsInCheck() == false;  //King.IsInCheck() without parameters uses the king's location given in the player's Piece map
+                    isLegal = Owner.King.IsInCheck() == false;  //King.IsInCheck() without parameters uses the king's location given in the owner's Piece map
                 }
                 
-                Board.RevertMove(move, captured);
+                RevertMove(move, captured);
                 if(isLegal)
                 {
                     return true;
@@ -43,12 +50,12 @@ namespace TwoPlayerChess.ClassLibrary
 
         public virtual bool IsMoveLegal(Move move)          //determines whether the move is one this kind of piece can perform 
         {
-            return false;
+            return false;  //implemented by derived classes
         }
 
         protected virtual List<Move> GetAllPossibleMoves(int[] myPosition)    //returns a list of all positions a piece can access
         {
-            return null;
+            return null;   //implemented by derived classes
         }
         protected List<Move> GetAllRangeMoves(int[] myPosition)
         {
@@ -78,9 +85,9 @@ namespace TwoPlayerChess.ClassLibrary
                 }
             }
             return allMoves;
-        }
+        }    //gets all possible moves for a bishop, rook, queen
 
-        protected List<Move> GetAllShortMoves(int[] myPosition)
+        protected List<Move> GetAllShortMoves(int[] myPosition)        //get all possible moves for a king, knight. 
         {
             var allMoves = new List<Move>();
 
@@ -101,10 +108,35 @@ namespace TwoPlayerChess.ClassLibrary
             return allMoves;
         }
 
-        public void Capture(Piece victim)
+        public void ExecuteMove(Move move, Piece victim)
+        {
+            if (victim != null)
+            {
+                Capture(victim);
+            }
+
+            TimesMoved++;
+            Owner.Pieces[this] = new int[2] { move.EndRank, move.EndFile };   
+        }
+        private void Capture(Piece victim)
         {
             Player opponent = Board.Players[(int)victim.Color];
             opponent.Pieces.Remove(victim);
+        }
+
+        public Piece StageMove(Move move)
+        {
+            var victim = Board.Pieces[move.EndRank][move.EndFile];
+            Board.Pieces[move.EndRank][move.EndFile] = this; 
+            Board.Pieces[move.StartRank][move.StartFile] = null;
+
+            return victim;
+        }
+
+        public void RevertMove(Move move, Piece victim)
+        {
+            Board.Pieces[move.StartRank][move.StartFile] = this; 
+            Board.Pieces[move.EndRank][move.EndFile] = victim;
         }
 
         public override string ToString()

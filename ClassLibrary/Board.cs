@@ -10,9 +10,8 @@ namespace TwoPlayerChess.ClassLibrary
         public const int TotalFiles = 8;
         public Player[] Players;
         public Piece[][] Pieces { get; set; }
-        public Game Game { get; set; }
 
-        public Board(Game game)
+        public Board(Player[] players)
         {
             Pieces = new Piece[TotalRanks][];
             for (int i = 0; i < TotalRanks; i++)
@@ -20,8 +19,7 @@ namespace TwoPlayerChess.ClassLibrary
                 Pieces[i] = new Piece[TotalFiles];
             }
 
-            Players = game.Players;
-            Game = game;
+            Players = players;
 
             Setup();
         }
@@ -82,69 +80,8 @@ namespace TwoPlayerChess.ClassLibrary
             player.King = king;
         }
 
-        public bool TryToMove(Move move)
-        {
-            var piece = Pieces[move.StartRank][move.StartFile];
-            if(piece == null || piece.Color != Players[Game.WhoseTurn].Color)  //you can only move your own piece
-            {
-                return false;
-            }
-
-            if(piece is King)
-            {
-                return (piece as King).TryToMove(move); //king executes his own moves
-            }
-
-            bool isLegal = piece.IsMoveLegal(move);
-
-            if(isLegal)
-            {
-                Piece captured = StageMove(move);
-                isLegal = Players[(int)piece.Color].King.IsInCheck() == false;
-
-                if (isLegal)
-                {
-                    ExecuteMove(move, captured);
-                }
-                else
-                {
-                    RevertMove(move, captured);
-                }
-            }
-            return isLegal;
-        }
-
-        public void ExecuteMove(Move move, Piece captured)
-        {
-            var moved = Pieces[move.EndRank][move.EndFile];
-
-            if(captured != null)
-            {
-                moved.Capture(captured);
-            }
-
-            moved.TimesMoved++;
-            Players[(int)moved.Color].Pieces[moved] = new int[2] { move.EndRank, move.EndFile };
-        }
-
-        public Piece StageMove(Move move)
-        {
-            var moved = Pieces[move.StartRank][move.StartFile];
-            var captured = Pieces[move.EndRank][move.EndFile];
-
-            Pieces[move.EndRank][move.EndFile] = moved;
-            Pieces[move.StartRank][move.StartFile] = null;
-
-            return captured;
-        }
-
-        public void RevertMove(Move move, Piece captured)
-        {
-            var moved = Pieces[move.EndRank][move.EndFile];
-            Pieces[move.StartRank][move.StartFile] = moved;
-            Pieces[move.EndRank][move.EndFile] = captured;
-        }
-        public void Draw()
+       
+        public void DisplayBoard()
         {
             StringBuilder sb = new StringBuilder();
 
@@ -190,10 +127,8 @@ namespace TwoPlayerChess.ClassLibrary
             {
                 sb.AppendFormat("    {0}\t", (char)('a' + i));
             }
-            //sb.AppendFormat("\n\n\t White in check: {0}. Black in check: {1}", Players[0].King.Check, Players[1].King.Check);
-            //sb.Append("\n\n");
-            Console.WriteLine(sb.ToString());
 
+            Console.WriteLine(sb.ToString());
         }
     }
 }

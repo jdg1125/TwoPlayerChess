@@ -6,12 +6,9 @@ namespace TwoPlayerChess.ClassLibrary
 {
     public class Knight : Piece
     {
-        public Knight(Player owner, Board board)
+        public Knight(Player owner, Board board) : base(owner, board)
         {
-            Color = owner.Color;
             Name = PieceType.Kt;
-            Owner = owner;
-            Board = board;
             Directions = new int[8][] { new int[2] { -2, -1}, new int[2] { -2, 1 }, new int[2] { -1, -2 }, new int[2] { -1, 2 },
                 new int[2] { 1, -2 }, new int[2] { 1, 2}, new int[2] { 2, -1}, new int[2] { 2, 1} };
         }

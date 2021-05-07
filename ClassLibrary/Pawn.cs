@@ -6,26 +6,24 @@ namespace TwoPlayerChess.ClassLibrary
 {
     public class Pawn : Piece
     {
-
-        public Pawn(Player owner, Board board)
+        private int[][] captureMoves;
+        public Pawn(Player owner, Board board) : base(owner, board)
         {
-            Color = owner.Color;
-            Name = PieceType.Pn;
-            Owner = owner;
-            TimesMoved = 0;
-            Board = board;
+            Name = PieceType.Pn;       
 
             if (Color == GameColors.White)
             {
                 Directions = new int[][] { new int[2] { -1, 0 } };
+                captureMoves = new int[2][] { new int[2] { -1, -1 }, new int[2] { -1, 1 } };
             }
             else
             {
                 Directions = new int[1][] { new int[2] { 1, 0 } };
+                captureMoves = new int[2][] { new int[2] { 1, -1 }, new int[2] { 1, 1 } };
             }
         }
 
-        public override bool IsMoveLegal(Move move)  //by the time the move gets here, we're sure it's within board bounds
+        public override bool IsMoveLegal(Move move) 
         {
             Piece target = Board.Pieces[move.EndRank][move.EndFile];
 
@@ -35,53 +33,50 @@ namespace TwoPlayerChess.ClassLibrary
             }
 
             bool tookTwoSteps;
-            bool isValid = IsRankValid(move, out tookTwoSteps) && IsFileValid(move, tookTwoSteps);
-            return isValid;
+            bool isLegal = IsRankValid(move, out tookTwoSteps) && IsFileValid(move, tookTwoSteps);
+            return isLegal;
         }
 
         protected override List<Move> GetAllPossibleMoves(int[] myPosition)
         {
-            List<Move> allMoves = GetAllShortMoves(myPosition);
+            List<Move> allMoves = new List<Move>() ;
 
-            if (TimesMoved == 0)
+            int endRank = myPosition[0] + Directions[0][0];   //test for a single step 
+            int endFile = myPosition[1] + Directions[0][1];
+
+            var piece = Board.Pieces[endRank][endFile];
+            bool isEmpty = piece == null;
+
+            if (isEmpty)
             {
-                int[] singleStep = Color == GameColors.White ? new int[2] { -1, 0 } : new int[2] { 1, 0 };
-                int endRank = myPosition[0] + singleStep[0];
-                int endFile = myPosition[1] + singleStep[1];
-                var piece = Board.Pieces[endRank][endFile];
-                bool isEmpty = piece == null;
-                endRank += singleStep[0];
-                endFile += singleStep[1];
+                allMoves.Add(new Move(myPosition[0], myPosition[1], endRank, endFile));
+            }
+
+            if (isEmpty && TimesMoved == 0)  // Here, test for the double step 
+            {
+                endRank += Directions[0][0];    //take another step and check if it's empty
+                endFile += Directions[0][1];   
+                
                 piece = Board.Pieces[endRank][endFile];
                 if (isEmpty && piece == null)
                 {
                     allMoves.Add(new Move(myPosition[0], myPosition[1], endRank, endFile));
                 }
             }
-            int[][] captureMoves;
-            if (Color == GameColors.White)
+            
+            foreach (var move in captureMoves)  //Here, test if we can perform any diagonal captures
             {
-                captureMoves = new int[2][] { new int[2] { -1, -1 }, new int[2] { -1, 1 } };
-            }
-            else
-            {
-                captureMoves = new int[2][] { new int[2] { 1, -1 }, new int[2] { 1, 1 } };
-            }
-            foreach (var move in captureMoves)
-            {
-                int endRank = myPosition[0] + move[0];
-                int endFile = myPosition[1] + move[1];
+                endRank = myPosition[0] + move[0];
+                endFile = myPosition[1] + move[1];
                 if (endRank < Board.TotalRanks && endRank >= 0 && endFile < Board.TotalFiles && endFile >= 0)
                 {
-                    var piece = Board.Pieces[endRank][endFile];
+                    piece = Board.Pieces[endRank][endFile];
                     if (piece != null && piece.Color != Color && !(piece is King))  //we can capture this piece
                     {
                         allMoves.Add(new Move(myPosition[0], myPosition[1], endRank, endFile));
                     }
                 }
             }
-
-
             return allMoves;
         }
 
@@ -95,27 +90,16 @@ namespace TwoPlayerChess.ClassLibrary
 
             if (TimesMoved == 0)
             {
-                bool white = Owner.Color == GameColors.White && (move.StartRank - move.EndRank <= 2) && (move.StartRank - move.EndRank > 0);
-                bool black = Owner.Color == GameColors.Black && (move.EndRank - move.StartRank <= 2) && (move.EndRank - move.StartRank > 0);
+                bool white = Color == GameColors.White && (move.StartRank - move.EndRank <= 2) && (move.StartRank - move.EndRank > 0);
+                bool black = Color == GameColors.Black && (move.EndRank - move.StartRank <= 2) && (move.EndRank - move.StartRank > 0);
 
-                if (white)
-                {
-                    tookTwoSteps = move.StartRank - move.EndRank == 2;
-                }
-                else if (black)
-                {
-                    tookTwoSteps = move.EndRank - move.StartRank == 2;
-                }
-                else
-                {
-                    tookTwoSteps = false;
-                }
+                tookTwoSteps = (white && move.StartRank - move.EndRank == 2) || (black && move.EndRank - move.StartRank == 2);
                 return white || black;
             }
             else
             {
-                bool white = Owner.Color == GameColors.White && (move.StartRank - move.EndRank <= 1) && (move.StartRank - move.EndRank > 0);
-                bool black = Owner.Color == GameColors.Black && (move.EndRank - move.StartRank <= 1) && (move.EndRank - move.StartRank > 0);
+                bool white = Color == GameColors.White && (move.StartRank - move.EndRank <= 1) && (move.StartRank - move.EndRank > 0);
+                bool black = Color == GameColors.Black && (move.EndRank - move.StartRank <= 1) && (move.EndRank - move.StartRank > 0);
                 tookTwoSteps = false;
                 return white || black;
             }
@@ -125,7 +109,7 @@ namespace TwoPlayerChess.ClassLibrary
         {
             if (tookTwoSteps)
             {
-                if (move.StartFile == move.EndFile)  //can only take leaps forward
+                if (move.StartFile == move.EndFile)  
                 {
                     if (this.Color == GameColors.White) //spaces moving to and over must be empty
                     {
@@ -143,11 +127,10 @@ namespace TwoPlayerChess.ClassLibrary
                 bool triedCapture = (move.EndFile == move.StartFile - 1) || (move.EndFile == move.StartFile + 1);
                 if (!triedCapture)
                 {
-                    return move.StartFile == move.EndFile && Board.Pieces[move.EndRank][move.EndFile] == null;  //moved forward one square - nobody there
+                    return move.StartFile == move.EndFile && Board.Pieces[move.EndRank][move.EndFile] == null;  //true if moved the pawn forward one to an empty square
                 }
                 else
-                {
-                    //TO DO: handle en passant 
+                { 
                     var piece = Board.Pieces[move.EndRank][move.EndFile];
                     return piece != null && piece.Color != this.Color;
                 }

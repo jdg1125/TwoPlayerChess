@@ -7,19 +7,26 @@ namespace TwoPlayerChess.ClassLibrary
     public class King : Piece
     {
         public bool Check { get; set; }
-        public int TimesInCheck { get; set; }
+        public int TimesInCheck { get; set; }   
 
-        public King(Player owner, Board board)
+        private int[][] knightLocations;  //used for testing whether king is being attacked by a knight
+        private int[][] rookDirections;
+        private int[][] bishopDirections;
+        public King(Player owner, Board board) : base(owner, board)
         {
-            Color = owner.Color;
             Name = PieceType.Kg;
-            Owner = owner;
-            TimesMoved = 0;
             Check = false;
             TimesInCheck = 0;
-            Board = board;
+      
             Directions = new int[8][] { new int[2] { 1, 1 }, new int[2] { 1, -1 }, new int[2] { -1, 1 }, new int[2] { -1, -1 },
                         new int[2] { 1, 0 }, new int[2] { -1, 0 }, new int[2] { 0, 1 }, new int[2] { 0, -1 } };
+
+            knightLocations = new int[8][] { new int[2] { -2, -1}, new int[2] { -2, 1 }, new int[2] { -1, -2 }, new int[2] { -1, 2 },
+                new int[2] { 1, -2 }, new int[2] { 1, 2}, new int[2] { 2, -1}, new int[2] { 2, 1} };
+
+            rookDirections = new int[4][] { new int[2] { 0, 1 }, new int[2] { 1, 0 }, new int[2] { 0, -1 }, new int[2] { -1, 0 } };
+
+            bishopDirections = new int[4][] { new int[2] { 1, 1 }, new int[2] { 1, -1 }, new int[2] { -1, 1 }, new int[2] { -1, -1 } };
         }
         public bool TryToMove(Move move)
         {
@@ -27,63 +34,64 @@ namespace TwoPlayerChess.ClassLibrary
             {
                 return false;
             }
-
+            
             int fileDiff = move.EndFile - move.StartFile;
             if(fileDiff == 2 || fileDiff == -2)
             {
                 ExecuteCastle(move);
+                return true;
             }
             else
             {
-                ExecuteMove(move);
-            }
+                Piece captured = StageMove(move);
+                bool canTakeMove = IsInCheck(new int[2] { move.EndRank, move.EndFile }) == false;
 
-            return true;
+                if (canTakeMove)
+                {
+                    this.ExecuteMove(move, captured);
+                }
+                else
+                {
+                    this.RevertMove(move, captured);
+                }
+
+                return canTakeMove;
+            }
         }
 
         private void ExecuteCastle(Move move)
         {
-            Board.StageMove(move);   //move the king. Don't call Board.ExecuteMove() because no capturing is necessary
-            TimesMoved++;
-            Owner.Pieces[this] = new int[2] { move.EndRank, move.EndFile };
+            this.StageMove(move);   //move the king. 
+            this.ExecuteMove(move, null);   
             
             int fileDiff = move.EndFile - move.StartFile;
             var rook = fileDiff < 0 ? Board.Pieces[move.StartRank][0] : Board.Pieces[move.StartRank][7];  //find rook to castle with
             int rookEndFile = fileDiff < 0 ? move.EndFile + 1 : move.EndFile - 1;
             var rookMove = new Move(Owner.Pieces[rook][0], Owner.Pieces[rook][1], Owner.Pieces[rook][0], rookEndFile);
             
-            Board.StageMove(rookMove);  //move the rook. 
-            rook.TimesMoved++;
-            Owner.Pieces[rook] = new int[2] { rookMove.EndRank, rookMove.EndFile };
+            rook.StageMove(rookMove);  //move the rook. 
+            rook.ExecuteMove(rookMove, null);
         }
 
-        private void ExecuteMove(Move move)
-        {
-            Piece captured = Board.StageMove(move);
-            Board.ExecuteMove(move, captured);
-        }
+      
         public override bool IsMoveLegal(Move move)
         {
-            //check for ordinary move - 1 step in any direction
-
             int rankDiff = move.EndRank - move.StartRank;
             int fileDiff = move.EndFile - move.StartFile;
 
-            if ((rankDiff >= -1 && rankDiff <= 1) && (fileDiff >= -1 && fileDiff <= 1))
+            if ((rankDiff >= -1 && rankDiff <= 1) && (fileDiff >= -1 && fileDiff <= 1)) //check for an ordinary move, 1 step in any direction
             {
-                Piece target = Board.Pieces[move.EndRank][move.EndFile];
-                if (target != null && target.Color == Color || target is King)
+                var piece = Board.Pieces[move.EndRank][move.EndFile];
+                if (piece != null && piece.Color == Color || piece is King)  //we cannot take our own piece or the opponent's king
                 {
-                    return false;
+                    return false;  
                 }
-                return IsInCheck(new int[2] { move.EndRank, move.EndFile }) == false;
+                return true;//IsInCheck(new int[2] { move.EndRank, move.EndFile }) == false;
             }
-
-            else if (rankDiff == 0 && (fileDiff == 2 || fileDiff == -2))
+            else if (rankDiff == 0 && (fileDiff == 2 || fileDiff == -2))  //check if castling is allowed
             {
                 return CanCastle(move, fileDiff);
             }
-
             return false;
         }
 
@@ -102,9 +110,9 @@ namespace TwoPlayerChess.ClassLibrary
                 bool isEmpty = IsCastleSideEmpty(move.StartRank, move.StartFile + fileDiff / 2, fileDiff / 2); //  fileDiff/2 gives the direction to check 
                 if (isEmpty)
                 {
-                    int[] testSquare = new int[2] { move.StartRank, move.StartFile + fileDiff / 2 };  //test square adjacent to king is not under attack
+                    int[] testSquare = new int[2] { move.StartRank, move.StartFile + fileDiff / 2 };  //test that the square adjacent to king is not under attack
                     bool tryOneStep = IsInCheck(testSquare);
-                    testSquare[1] += fileDiff / 2;      //test square two steps away is not under attack
+                    testSquare[1] += fileDiff / 2;      //test that the square two steps away is not under attack
                     return (tryOneStep || IsInCheck(testSquare)) == false;
                 }
             }
@@ -120,20 +128,17 @@ namespace TwoPlayerChess.ClassLibrary
             Piece test = Board.Pieces[rank][file];
 
             return test == null && IsCastleSideEmpty(rank, file + direction, direction);
-        }
+        }  //checks that no pieces are between the king and the rook it's trying to castle with
         public bool IsInCheck()
         {
-            int[] location = Owner.Pieces[this];
-
-            bool testForCheck = TestForKnights(location) || TestForPawns(location) || TestForBishops(location) || TestForRooks(location);
-
+            int[] myPosition = Owner.Pieces[this];
+            bool testForCheck = TestForKnights(myPosition) || TestForPawns(myPosition) || TestForBishops(myPosition) || TestForRooks(myPosition);
             return testForCheck;
         }
 
-        public bool IsInCheck(int[] location)
+        public bool IsInCheck(int[] testPosition)
         {
-            bool testForCheck = TestForKnights(location) || TestForPawns(location) || TestForBishops(location) || TestForRooks(location);
-
+            bool testForCheck = TestForKnights(testPosition) || TestForPawns(testPosition) || TestForBishops(testPosition) || TestForRooks(testPosition);
             return testForCheck;
         }
 
@@ -150,64 +155,61 @@ namespace TwoPlayerChess.ClassLibrary
             }
         }
 
-        private bool TestForKnights(int[] location)
+        private bool TestForKnights(int[] myPosition)
         {
-            int[] offsets = new int[4] { -2, -1, 2, 1 };
-            for (int i = 0; i < offsets.Length; i++)
+            for(int i=0; i<knightLocations.Length; i++)
             {
-                for (int j = 0; j < offsets.Length; j++)
-                {
-                    if ((offsets[i] & 1) == (offsets[j] & 1)) //skip the combination if abs val of offsets[i] == offsets[j]
-                    {
-                        continue;
-                    }
-                    bool rankInBounds = location[0] + offsets[i] >= 0 && location[0] + offsets[i] < Board.TotalRanks;
-                    bool fileInBounds = location[1] + offsets[j] >= 0 && location[1] + offsets[j] < Board.TotalFiles;
+                int testRank = myPosition[0] + knightLocations[i][0];
+                int testFile = myPosition[1] + knightLocations[i][1];
+                bool rankInBounds = testRank >= 0 && testRank < Board.TotalRanks;
+                bool fileInBounds = testFile >= 0 && testFile < Board.TotalFiles;
 
-                    if (rankInBounds && fileInBounds)
+                if (rankInBounds && fileInBounds)
+                {
+                    var piece = Board.Pieces[testRank][testFile];
+                    if (piece is Knight && piece.Color != Color)
                     {
-                        var piece = Board.Pieces[location[0] + offsets[i]][location[1] + offsets[j]];
-                        if (piece is Knight && piece.Color != Color)
-                        {
-                            return true;
-                        }
+                        return true;
                     }
                 }
             }
-
             return false;
         }
 
-        private bool TestForPawns(int[] location)
+        private bool TestForPawns(int[] myPosition)
         {
-            int[] leftAttack, rightAttack;
+            int[] leftPosition, rightPosition;
 
             if (Color == GameColors.White)
             {
-                leftAttack = new int[2] { location[0] - 1, location[1] - 1 };
-                rightAttack = new int[2] { location[0] - 1, location[1] + 1 };
+                leftPosition = new int[2] { myPosition[0] - 1, myPosition[1] - 1 };
+                rightPosition = new int[2] { myPosition[0] - 1, myPosition[1] + 1 };
             }
             else
             {
-                leftAttack = new int[2] { location[0] + 1, location[1] + 1 };
-                rightAttack = new int[2] { location[0] + 1, location[1] - 1 };
+                leftPosition = new int[2] { myPosition[0] + 1, myPosition[1] + 1 };
+                rightPosition = new int[2] { myPosition[0] + 1, myPosition[1] - 1 };
             }
 
-            bool leftInBounds = (leftAttack[0] >= 0 && leftAttack[0] < Board.TotalRanks) && (leftAttack[1] >= 0 && leftAttack[1] < Board.TotalFiles);
-            bool rightInBounds = (rightAttack[0] >= 0 && rightAttack[0] < Board.TotalRanks) && (rightAttack[1] >= 0 && rightAttack[1] < Board.TotalFiles);
+            bool leftInBounds = (leftPosition[0] >= 0 && leftPosition[0] < Board.TotalRanks) && (leftPosition[1] >= 0 && leftPosition[1] < Board.TotalFiles);
+            bool rightInBounds = (rightPosition[0] >= 0 && rightPosition[0] < Board.TotalRanks) && (rightPosition[1] >= 0 && rightPosition[1] < Board.TotalFiles);
 
-            if (leftInBounds)
+            return (leftInBounds && IsPawnAttacking(leftPosition)) || (rightInBounds && IsPawnAttacking(rightPosition));
+        }
+
+        private bool IsPawnAttacking(int[] pawnPosition)
+        {
+            var piece = Board.Pieces[pawnPosition[0]][pawnPosition[1]];
+            return piece is Pawn && Owner.Color != piece.Color;
+        }
+
+
+        private bool TestForBishops(int[] myPosition)
+        {
+            for (int i = 0; i < bishopDirections.Length; i++)
             {
-                var piece = Board.Pieces[leftAttack[0]][leftAttack[1]];
-                if (piece is Pawn && Owner.Color != piece.Color)
-                {
-                    return true;
-                }
-            }
-            if (rightInBounds)
-            {
-                var piece = Board.Pieces[rightAttack[0]][rightAttack[1]];
-                if (piece is Pawn && Owner.Color != piece.Color)
+                bool foundBishop = TestPath<Bishop>(myPosition[0] + bishopDirections[i][0], myPosition[1] + bishopDirections[i][1], bishopDirections[i]);
+                if (foundBishop)
                 {
                     return true;
                 }
@@ -216,17 +218,7 @@ namespace TwoPlayerChess.ClassLibrary
             return false;
         }
 
-        private bool TestForBishops(int[] location)
-        {
-            bool path1 = TestPath<Bishop>(location[0] + 1, location[1] + 1, new int[2] { 1, 1 });
-            bool path2 = TestPath<Bishop>(location[0] + 1, location[1] - 1, new int[2] { 1, -1 });
-            bool path3 = TestPath<Bishop>(location[0] - 1, location[1] + 1, new int[2] { -1, 1 });
-            bool path4 = TestPath<Bishop>(location[0] - 1, location[1] - 1, new int[2] { -1, -1 });
-
-            return path1 || path2 || path3 || path4;
-        }
-
-        private bool TestPath<T>(int rank, int file, int[] direction)
+        private bool TestPath<T>(int rank, int file, int[] direction)  //checks whether positions along the path described by direction contain long range pieces
         {
             if (rank < 0 || file < 0 || rank == Board.TotalRanks || file == Board.TotalFiles)
             {
@@ -250,19 +242,23 @@ namespace TwoPlayerChess.ClassLibrary
             return TestPath<T>(rank, file, direction);
         }
 
-        private bool TestForRooks(int[] location)
+        private bool TestForRooks(int[] myPosition)
         {
-            bool path1 = TestPath<Rook>(location[0] + 1, location[1], new int[2] { 1, 0 });
-            bool path2 = TestPath<Rook>(location[0], location[1] + 1, new int[2] { 0, 1 });
-            bool path3 = TestPath<Rook>(location[0] - 1, location[1], new int[2] { -1, 0 });
-            bool path4 = TestPath<Rook>(location[0], location[1] - 1, new int[2] { 0, -1 });
+            for(int i=0; i<rookDirections.Length; i++)
+            {
+                bool foundRook = TestPath<Rook>(myPosition[0] + rookDirections[i][0], myPosition[1] + rookDirections[i][1], rookDirections[i]);
+                if(foundRook)
+                {
+                    return true; 
+                }
+            }
 
-            return path1 || path2 || path3 || path4;
+            return false;
         }
 
-        protected override List<Move> GetAllPossibleMoves(int[] position)
+        protected override List<Move> GetAllPossibleMoves(int[] myPosition)
         {
-            return GetAllShortMoves(position);
+            return GetAllShortMoves(myPosition);
         }
     }
 }
