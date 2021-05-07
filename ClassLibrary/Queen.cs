@@ -12,6 +12,8 @@ namespace TwoPlayerChess.ClassLibrary
             Owner = owner;
             Board = board;
             Name = PieceType.Qn;
+            Directions = new int[8][] { new int[2] { 1, 1 }, new int[2] { 1, -1 }, new int[2] { -1, 1 }, new int[2] { -1, -1 }, 
+                        new int[2] { 1, 0 }, new int[2] { -1, 0 }, new int[2] { 0, 1 }, new int[2] { 0, -1 } };
         }
 
         public override bool IsMoveLegal(Move move)
@@ -26,6 +28,11 @@ namespace TwoPlayerChess.ClassLibrary
                 Bishop tmpBishop = new Bishop(Owner, Board);  //queen behaving like a rook
                 return tmpBishop.IsMoveLegal(move);
             }
+        }
+
+        protected override List<Move> GetAllPossibleMoves(int[] myPosition)
+        {
+            return GetAllRangeMoves(myPosition);
         }
     }
 }

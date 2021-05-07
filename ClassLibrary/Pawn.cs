@@ -14,6 +14,15 @@ namespace TwoPlayerChess.ClassLibrary
             Owner = owner;
             TimesMoved = 0;
             Board = board;
+
+            if (Color == GameColors.White)
+            {
+                Directions = new int[][] { new int[2] { -1, 0 } };
+            }
+            else
+            {
+                Directions = new int[1][] { new int[2] { 1, 0 } };
+            }
         }
 
         public override bool IsMoveLegal(Move move)  //by the time the move gets here, we're sure it's within board bounds
@@ -28,6 +37,52 @@ namespace TwoPlayerChess.ClassLibrary
             bool tookTwoSteps;
             bool isValid = IsRankValid(move, out tookTwoSteps) && IsFileValid(move, tookTwoSteps);
             return isValid;
+        }
+
+        protected override List<Move> GetAllPossibleMoves(int[] myPosition)
+        {
+            List<Move> allMoves = GetAllShortMoves(myPosition);
+
+            if (TimesMoved == 0)
+            {
+                int[] singleStep = Color == GameColors.White ? new int[2] { -1, 0 } : new int[2] { 1, 0 };
+                int endRank = myPosition[0] + singleStep[0];
+                int endFile = myPosition[1] + singleStep[1];
+                var piece = Board.Pieces[endRank][endFile];
+                bool isEmpty = piece == null;
+                endRank += singleStep[0];
+                endFile += singleStep[1];
+                piece = Board.Pieces[endRank][endFile];
+                if (isEmpty && piece == null)
+                {
+                    allMoves.Add(new Move(myPosition[0], myPosition[1], endRank, endFile));
+                }
+            }
+            int[][] captureMoves;
+            if (Color == GameColors.White)
+            {
+                captureMoves = new int[2][] { new int[2] { -1, -1 }, new int[2] { -1, 1 } };
+            }
+            else
+            {
+                captureMoves = new int[2][] { new int[2] { 1, -1 }, new int[2] { 1, 1 } };
+            }
+            foreach (var move in captureMoves)
+            {
+                int endRank = myPosition[0] + move[0];
+                int endFile = myPosition[1] + move[1];
+                if (endRank < Board.TotalRanks && endRank >= 0 && endFile < Board.TotalFiles && endFile >= 0)
+                {
+                    var piece = Board.Pieces[endRank][endFile];
+                    if (piece != null && piece.Color != Color && !(piece is King))  //we can capture this piece
+                    {
+                        allMoves.Add(new Move(myPosition[0], myPosition[1], endRank, endFile));
+                    }
+                }
+            }
+
+
+            return allMoves;
         }
 
         private bool IsRankValid(Move move, out bool tookTwoSteps)
@@ -70,7 +125,7 @@ namespace TwoPlayerChess.ClassLibrary
         {
             if (tookTwoSteps)
             {
-                if (move.StartFile == move.EndFile)  //can only take forward leaps
+                if (move.StartFile == move.EndFile)  //can only take leaps forward
                 {
                     if (this.Color == GameColors.White) //spaces moving to and over must be empty
                     {

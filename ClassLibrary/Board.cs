@@ -138,7 +138,7 @@ namespace TwoPlayerChess.ClassLibrary
             return captured;
         }
 
-        private void RevertMove(Move move, Piece captured)
+        public void RevertMove(Move move, Piece captured)
         {
             var moved = Pieces[move.EndRank][move.EndFile];
             Pieces[move.StartRank][move.StartFile] = moved;

@@ -18,6 +18,8 @@ namespace TwoPlayerChess.ClassLibrary
             Check = false;
             TimesInCheck = 0;
             Board = board;
+            Directions = new int[8][] { new int[2] { 1, 1 }, new int[2] { 1, -1 }, new int[2] { -1, 1 }, new int[2] { -1, -1 },
+                        new int[2] { 1, 0 }, new int[2] { -1, 0 }, new int[2] { 0, 1 }, new int[2] { 0, -1 } };
         }
         public bool TryToMove(Move move)
         {
@@ -128,7 +130,7 @@ namespace TwoPlayerChess.ClassLibrary
             return testForCheck;
         }
 
-        private bool IsInCheck(int[] location)
+        public bool IsInCheck(int[] location)
         {
             bool testForCheck = TestForKnights(location) || TestForPawns(location) || TestForBishops(location) || TestForRooks(location);
 
@@ -258,5 +260,9 @@ namespace TwoPlayerChess.ClassLibrary
             return path1 || path2 || path3 || path4;
         }
 
+        protected override List<Move> GetAllPossibleMoves(int[] position)
+        {
+            return GetAllShortMoves(position);
+        }
     }
 }

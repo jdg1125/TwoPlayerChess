@@ -7,7 +7,7 @@ namespace TwoPlayerChess.ClassLibrary
     public class Player
     {
         public King King { get; set; }
-        public Dictionary<Piece, int[]> Pieces { get; set; }
+        public Dictionary<Piece, int[]> Pieces { get; set; }     //maps pieces to their coordinates on the board
         public Board Board { get; set; }
         public GameColors Color { get; private set; }
 
@@ -22,7 +22,14 @@ namespace TwoPlayerChess.ClassLibrary
 
         private bool AbleToMove()
         {
-            return true;
+            foreach(var piece in Pieces.Keys)
+            {
+                if(piece.HasLegalMoves())
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public void RemovePiece(Piece victim)

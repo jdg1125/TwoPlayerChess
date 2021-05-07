@@ -12,6 +12,7 @@ namespace TwoPlayerChess.ClassLibrary
             Owner = owner;
             Board = board;
             Name = PieceType.Bp;
+            Directions = new int[4][] { new int[2] { 1, 1 }, new int[2] { 1, -1 }, new int[2] { -1, 1 }, new int[2] { -1, -1 } };
         }
 
         public override bool IsMoveLegal(Move move)
@@ -47,6 +48,11 @@ namespace TwoPlayerChess.ClassLibrary
             }
 
             return false;
+        }
+
+        protected override List<Move> GetAllPossibleMoves(int[] myPosition)
+        {
+            return GetAllRangeMoves(myPosition);
         }
 
         private bool TestPath(Move move, int rank, int file, int[] direction)
